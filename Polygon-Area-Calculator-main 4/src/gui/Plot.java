@@ -3,287 +3,382 @@ package gui;
 
 import ExtraFunctions.*;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.Rectangle;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 
 @SuppressWarnings("serial")
 public class Plot extends JPanel implements MouseMotionListener {
-	private getAngles polygon = new getAngles(); // This object stores all the properties of the polygon drawn on screen
-	// This object stores all the properties of the polygon drawn on screen
-	private int verticesSize = 22;
-	private Rectangle[] vertices = new Rectangle[4]; // Vertices are invisible squares having sides of length
-	// verticesSize that allow us to drag polygon's vertices
-	private Polygon poly;
-	private int currentVertexIndex = -1; // This stores the index of vertex currently being dragged by the user
-	public Color c1 = new Color(0, 0, 0);
-	public Color c2 = new Color(255, 255, 255);
-	public Color c3 = new Color(255, 255, 255);
-	private float polygonWidth = 3;
-	private JButton areaLabel = new JButton();
-	private JTextField t = new JTextField("Enter Required Side Length",20);
-	private JButton reset = new JButton("RESET");
-	private JButton GOBack = new JButton("GO BACK");
-	public Plot(JFrame jFrame,int scale) {
-		setSize(1200, 700);
-		setBackground(c2);
-		setLayout(new BorderLayout());
-		if(scale%2==0)
-		{
-			int xP[] = {(getWidth()/2-scale/2),(getWidth()/2+scale/2),(getWidth()/2+scale/2),(getWidth()/2-scale/2)};
-			int yP[] = {(getHeight()/2-scale/2),(getHeight()/2-scale/2),(getHeight()/2+scale/2),(getHeight()/2+scale/2)};
-			polygon.setXs(xP);
-			polygon.setYs(yP);
-		}
-		else
-		{
-			int xP[] = {(getWidth()/2-scale/2),(getWidth()/2+scale/2+1),(getWidth()/2+scale/2+1),(getWidth()/2-scale/2)};
-			int yP[] = {(getHeight()/2-scale/2-1),(getHeight()/2-scale/2-1),(getHeight()/2+scale/2),(getHeight()/2+scale/2)};
-			polygon.setXs(xP);
-			polygon.setYs(yP);
-		}
-		polygon.changePoint();
-		poly = new java.awt.Polygon(polygon.getXs(), polygon.getYs(), 4);
-		
-		areaLabel.setFont(new Font("courier", Font.BOLD, 30));
-		areaLabel.setForeground(c3);
-		areaLabel.setBackground(c1);
-		areaLabel.setSize(200,50);
-		add(areaLabel,BorderLayout.PAGE_START);
-		reset.setFont(new Font("courier", Font.BOLD, 30));
-		reset.setForeground(c3);
-		reset.setBackground(c1);
-		reset.setSize(200,50);
-		add(reset,BorderLayout.EAST);
-		GOBack.setFont(new Font("courier", Font.BOLD, 30));
-		GOBack.setForeground(c3);
-		GOBack.setBackground(c1);
-		GOBack.setSize(200,50);
-		add(GOBack,BorderLayout.WEST);
-		t.setFont(new Font("courier", Font.BOLD, 30));
-		t.setForeground(c3);
-		t.setBackground(c1);
-		t.setSize(200,50);
-		add(t,BorderLayout.PAGE_END);
-		
-		for (int i = 0; i < 4; i++) // This forLoop sets the initial locations(x,y) of all the vertices
-		{
-			Rectangle r = new Rectangle();
-			r.setBounds((int) (polygon.getX(i) - verticesSize * 0.5), (int) (polygon.getY(i) - verticesSize * 0.5),
-					verticesSize, verticesSize);
-			vertices[i] = r;
-		}
-		
-		areaLabel.setText("<html>Area of Polygon = " + polygon.getArea() + " unit\u00B2<br>Angles: A= " + polygon.getAngle(0) + " B= " + polygon.getAngle(1) + " C= " + polygon.getAngle(2) + " D= " + polygon.getAngle(3) +"</html>");
-		
-		t.addFocusListener(new FocusListener()
-		{
-			    @Override
-				public void focusGained(FocusEvent e) { 
-	               if(t.getText().equals("Enter Required Side Length"))
-	               {
-	                   t.setText("");
-	               }
-	            }
-
-				public void focusLost(FocusEvent a) { 
-		            }
-		});
-		
-		reset.addActionListener(new ActionListener() {
-    	    @Override
-    	    public void actionPerformed(ActionEvent e) {
-    	    	int val=250;
-    	    	try
-    	    	{
-    	    		String name = t.getText();
-        	    	val =Integer.parseInt(name);
-    	    	}
-    	    	catch(NumberFormatException ex )
-    	    	{
-    	    		
-    	    	}
-    	    	jFrame.getContentPane().removeAll();
-    	    	Start info = new Start(jFrame,0,val);
-    	    	jFrame.getContentPane().add(info);
-    	    	
-    	   	}
-    	    
-    	});
-		
-		GOBack.addActionListener(new ActionListener() {
-    	    @Override
-    	    public void actionPerformed(ActionEvent e) {
-    	    	jFrame.getContentPane().removeAll();
-    	    	Start info = new Start(jFrame,1,250);
-    	    	jFrame.getContentPane().add(info);
-    	    	jFrame.revalidate();
-    			jFrame.repaint();
-    	   	}
-    	    
-    	});
-
-		addMouseListener(new MouseAdapter() {
-
-			@Override
-			public void mousePressed(MouseEvent me) { // This method implements the change of CursorStyle when mouse is
-				// pressed over a vertex
-				int x = me.getX();
-				int y = me.getY();
-				currentVertexIndex = getVertexIndex(x, y);
-
-				if (getVertexIndex(x, y) >= 0) {
-					setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-				} else {
-					setCursor(Cursor.getDefaultCursor());
-				}
-			}
-		});
-
-		addMouseMotionListener(this);
-	}
-
-	@Override
-	protected void paintComponent(Graphics g) { // Draws initial polygon and all of it's properties such as area,
-		// lengths and angles on the Frame
-
-		super.paintComponent(g);
-		g.setColor(c2);
-
-		for (int i = 0; i < 4; i++) {
-			((Graphics2D) g).draw(vertices[i]);
-		}
-
-		g.setColor(c1);
-		((Graphics2D) g).setStroke(new BasicStroke(polygonWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		((Graphics2D) g).draw(poly);
-		((Graphics2D) g).setFont(new Font("courier", Font.BOLD, 15));
-		((Graphics2D) g).drawString("A", (int) polygon.getX(0) - 15,
-				(int) polygon.getY(0) - 5);
-		((Graphics2D) g).drawString("B", (int) polygon.getX(1) + 5,
-				(int) polygon.getY(1) - 5);
-		((Graphics2D) g).drawString("C", (int) polygon.getX(2) + 5,
-				(int) polygon.getY(2) + 15);
-		((Graphics2D) g).drawString("D", (int) polygon.getX(3) - 15,
-				(int) polygon.getY(3) + 15);
-		((Graphics2D) g).drawString(polygon.GetLength(0) + " units", (int) polygon.getXMid(0) - 50,
-				(int) polygon.getYMid(0) - 10);
-		((Graphics2D) g).drawString(polygon.GetLength(1) + " units", (int) polygon.getXMid(1) + 10,
-				(int) polygon.getYMid(1) + 5);
-		((Graphics2D) g).drawString(polygon.GetLength(2) + " units", (int) polygon.getXMid(2) -50,
-				(int) polygon.getYMid(2) + 20);
-		((Graphics2D) g).drawString(polygon.GetLength(3) + " units", (int) polygon.getXMid(3) - 110,
-				(int) polygon.getYMid(3) +5);
-		((Graphics2D) g).setFont(new Font("courier", Font.BOLD, 25));
-		areaLabel.setText("<html>Area of Polygon = " + polygon.getArea() + " unit\u00B2<br>Angles: A= " + polygon.getAngle(0) + " B= " + polygon.getAngle(1) + " C= " + polygon.getAngle(2) + " D= " + polygon.getAngle(3) +"</html>");
-	}
-
-	private int getVertexIndex(int x, int y) { // This functions returns the index of vertexSquare that contains (x,y)
-		// else it returns -1
-		for (int i = 0; i < 4; i++) {
-			if (vertices[i].contains(x, y)) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
-	public void mouseMoved(MouseEvent me) { // This method implements the change of CursorStyle when mouse is moved over a vertex
-		
-		int x = me.getX();
-		int y = me.getY();
-
-		if (getVertexIndex(x, y) >= 0) {
-			setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-		} else
-			setCursor(Cursor.getDefaultCursor());
-	}
-
-	public void mouseDragged(MouseEvent me) { // When a vertex is dragged, this method gets rid of initial polygon and
-		// draws a polygon updated with its new properties and location
-		int x = me.getX();
-		int y = me.getY();
-
-		if (getBounds().contains(x, y)) {
-			if (currentVertexIndex >= 0) {
-
-				Graphics g = getGraphics();
-				((Graphics2D) g)
-				.setStroke(new BasicStroke(polygonWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-				g.setColor(c2);
-				((Graphics2D) g).setFont(new Font("courier", Font.BOLD, 15));
-				((Graphics2D) g).draw(poly);
-				((Graphics2D) g).drawString("A", (int) polygon.getX(0) - 15,
-						(int) polygon.getY(0) - 5);
-				((Graphics2D) g).drawString("B", (int) polygon.getX(1) + 5,
-						(int) polygon.getY(1) - 5);
-				((Graphics2D) g).drawString("C", (int) polygon.getX(2) + 5,
-						(int) polygon.getY(2) + 15);
-				((Graphics2D) g).drawString("D", (int) polygon.getX(3) - 15,
-						(int) polygon.getY(3) + 15);
-				((Graphics2D) g).drawString(polygon.GetLength(0) + " units", (int) polygon.getXMid(0) - 50,
-						(int) polygon.getYMid(0) - 10);
-				((Graphics2D) g).drawString(polygon.GetLength(1) + " units", (int) polygon.getXMid(1) + 10,
-						(int) polygon.getYMid(1) + 5);
-				((Graphics2D) g).drawString(polygon.GetLength(2) + " units", (int) polygon.getXMid(2) -50,
-						(int) polygon.getYMid(2) + 20);
-				((Graphics2D) g).drawString(polygon.GetLength(3) + " units", (int) polygon.getXMid(3) - 110,
-						(int) polygon.getYMid(3) +5);
-
-				((Graphics2D) g).setFont(new Font("courier", Font.BOLD, 25));
-				areaLabel.setText("<html>Area of Polygon = " + polygon.getArea() + " unit\u00B2<br>Angles: A= " + polygon.getAngle(0) + " B= " + polygon.getAngle(1) + " C= " + polygon.getAngle(2) + " D= " + polygon.getAngle(3) +"</html>");
-
-				polygon.changePoint(x, y, currentVertexIndex);
-				vertices[currentVertexIndex].x = (int) (polygon.getX(currentVertexIndex) - verticesSize * 0.5);
-				vertices[currentVertexIndex].y = (int) (polygon.getY(currentVertexIndex) - verticesSize * 0.5);
-				poly = new java.awt.Polygon(polygon.getXs(), polygon.getYs(), 4);
-				((Graphics2D) g).draw(vertices[currentVertexIndex]);
-
-				g.setColor(c1);
-				((Graphics2D) g).setFont(new Font("courier", Font.BOLD, 25));
-				areaLabel.setText("<html>Area of Polygon = " + polygon.getArea() + " unit\u00B2<br>Angles: A= " + polygon.getAngle(0) + " B= " + polygon.getAngle(1) + " C= " + polygon.getAngle(2) + " D= " + polygon.getAngle(3) +"</html>");
-				((Graphics2D) g)
-				.setStroke(new BasicStroke(polygonWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-				((Graphics2D) g).draw(poly);
-				((Graphics2D) g).setFont(new Font("courier", Font.BOLD, 15));
-				((Graphics2D) g).drawString("A", (int) polygon.getX(0) - 15,
-						(int) polygon.getY(0) - 5);
-				((Graphics2D) g).drawString("B", (int) polygon.getX(1) + 5,
-						(int) polygon.getY(1) - 5);
-				((Graphics2D) g).drawString("C", (int) polygon.getX(2) + 5,
-						(int) polygon.getY(2) + 15);
-				((Graphics2D) g).drawString("D", (int) polygon.getX(3) - 15,
-						(int) polygon.getY(3) + 15);
-				((Graphics2D) g).drawString(polygon.GetLength(0) + " units", (int) polygon.getXMid(0) - 50,
-						(int) polygon.getYMid(0) - 10);
-				((Graphics2D) g).drawString(polygon.GetLength(1) + " units", (int) polygon.getXMid(1) + 10,
-						(int) polygon.getYMid(1) + 5);
-				((Graphics2D) g).drawString(polygon.GetLength(2) + " units", (int) polygon.getXMid(2) -50,
-						(int) polygon.getYMid(2) + 20);
-				((Graphics2D) g).drawString(polygon.GetLength(3) + " units", (int) polygon.getXMid(3) - 110,
-						(int) polygon.getYMid(3) +5);
-				g.dispose();
-			}
-		}
-	}
+    private getAngles polygon = new getAngles();
+    private int verticesSize = 16; // Reduced for better precision
+    private Rectangle[] vertices = new Rectangle[4];
+    private Polygon poly;
+    private int currentVertexIndex = -1;
+    
+    // Modern color scheme
+    public Color primaryColor = new Color(52, 152, 219); // Blue
+    public Color secondaryColor = new Color(41, 128, 185); // Darker blue
+    public Color accentColor = new Color(46, 204, 113); // Green
+    public Color backgroundColor = new Color(236, 240, 241); // Light gray
+    public Color surfaceColor = new Color(255, 255, 255); // White
+    public Color textColor = new Color(44, 62, 80); // Dark gray
+    public Color borderColor = new Color(189, 195, 199); // Light gray border
+    
+    private float polygonWidth = 3;
+    private JPanel infoPanel;
+    private JLabel areaLabel;
+    private JLabel anglesLabel;
+    private JTextField sideLengthField;
+    private JButton resetButton;
+    private JButton goBackButton;
+    private JPanel controlPanel;
+    
+    public Plot(JFrame jFrame, int scale) {
+        setSize(1400, 800); // Increased size for better layout
+        setBackground(backgroundColor);
+        setLayout(new BorderLayout(20, 20));
+        setBorder(new EmptyBorder(20, 20, 20, 20));
+        
+        // Initialize polygon
+        initializePolygon(scale);
+        
+        // Create UI components
+        createInfoPanel();
+        createControlPanel();
+        
+        // Add components to layout
+        add(infoPanel, BorderLayout.NORTH);
+        add(controlPanel, BorderLayout.SOUTH);
+        add(createSidePanel(), BorderLayout.EAST);
+        
+        // Add mouse listeners
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent me) {
+                int x = me.getX();
+                int y = me.getY();
+                currentVertexIndex = getVertexIndex(x, y);
+                if (currentVertexIndex >= 0) {
+                    setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                }
+            }
+            
+            @Override
+            public void mouseReleased(MouseEvent me) {
+                currentVertexIndex = -1;
+                setCursor(Cursor.getDefaultCursor());
+            }
+        });
+        
+        addMouseMotionListener(this);
+        
+        updateDisplay();
+    }
+    
+    private void initializePolygon(int scale) {
+        if (scale % 2 == 0) {
+            int xP[] = {(getWidth()/2-scale/2), (getWidth()/2+scale/2), (getWidth()/2+scale/2), (getWidth()/2-scale/2)};
+            int yP[] = {(getHeight()/2-scale/2), (getHeight()/2-scale/2), (getHeight()/2+scale/2), (getHeight()/2+scale/2)};
+            polygon.setXs(xP);
+            polygon.setYs(yP);
+        } else {
+            int xP[] = {(getWidth()/2-scale/2), (getWidth()/2+scale/2+1), (getWidth()/2+scale/2+1), (getWidth()/2-scale/2)};
+            int yP[] = {(getHeight()/2-scale/2-1), (getHeight()/2-scale/2-1), (getHeight()/2+scale/2), (getHeight()/2+scale/2)};
+            polygon.setXs(xP);
+            polygon.setYs(yP);
+        }
+        polygon.changePoint();
+        poly = new Polygon(polygon.getXs(), polygon.getYs(), 4);
+        
+        // Initialize vertices
+        for (int i = 0; i < 4; i++) {
+            Rectangle r = new Rectangle();
+            r.setBounds((int) (polygon.getX(i) - verticesSize * 0.5), 
+                       (int) (polygon.getY(i) - verticesSize * 0.5),
+                       verticesSize, verticesSize);
+            vertices[i] = r;
+        }
+    }
+    
+    private void createInfoPanel() {
+        infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(surfaceColor);
+        infoPanel.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(borderColor, 1, true),
+            new EmptyBorder(15, 20, 15, 20)
+        ));
+        
+        // Title
+        JLabel titleLabel = new JLabel("Polygon Area Calculator");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titleLabel.setForeground(primaryColor);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Area label
+        areaLabel = new JLabel();
+        areaLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        areaLabel.setForeground(textColor);
+        areaLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Angles label
+        anglesLabel = new JLabel();
+        anglesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        anglesLabel.setForeground(textColor);
+        anglesLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        infoPanel.add(titleLabel);
+        infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(areaLabel);
+        infoPanel.add(Box.createVerticalStrut(5));
+        infoPanel.add(anglesLabel);
+    }
+    
+    private void createControlPanel() {
+        controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        controlPanel.setBackground(surfaceColor);
+        controlPanel.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(borderColor, 1, true),
+            new EmptyBorder(15, 20, 15, 20)
+        ));
+        
+        // Side length field
+        sideLengthField = new JTextField("Enter side length", 15);
+        styleTextField(sideLengthField);
+        sideLengthField.setToolTipText("Enter a specific side length to reset the polygon");
+        
+        // Reset button
+        resetButton = createStyledButton("Reset", accentColor);
+        resetButton.setToolTipText("Reset polygon to original square shape");
+        resetButton.addActionListener(e -> resetPolygon());
+        
+        // Go back button
+        goBackButton = createStyledButton("Go Back", secondaryColor);
+        goBackButton.setToolTipText("Return to the main menu");
+        goBackButton.addActionListener(e -> {
+            // Handle go back functionality
+            JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            parentFrame.getContentPane().removeAll();
+            Start info = new Start(parentFrame, 0, 250);
+            parentFrame.setSize(info.getSize());
+            parentFrame.getContentPane().add(info);
+            parentFrame.revalidate();
+            parentFrame.repaint();
+        });
+        
+        controlPanel.add(sideLengthField);
+        controlPanel.add(resetButton);
+        controlPanel.add(goBackButton);
+    }
+    
+    private JPanel createSidePanel() {
+        JPanel sidePanel = new JPanel();
+        sidePanel.setPreferredSize(new Dimension(250, 0));
+        sidePanel.setBackground(surfaceColor);
+        sidePanel.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(borderColor, 1, true),
+            new EmptyBorder(15, 15, 15, 15)
+        ));
+        sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
+        
+        // Instructions
+        JLabel instructionsLabel = new JLabel("<html><b>Instructions:</b><br>" +
+            "• Drag vertices to reshape the polygon<br>" +
+            "• Area and angles update automatically<br>" +
+            "• Use Reset to return to square<br>" +
+            "• Enter side length for specific measurements</html>");
+        instructionsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        instructionsLabel.setForeground(textColor);
+        instructionsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        sidePanel.add(instructionsLabel);
+        sidePanel.add(Box.createVerticalStrut(20));
+        
+        return sidePanel;
+    }
+    
+    private JButton createStyledButton(String text, Color color) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                if (getModel().isPressed()) {
+                    g2.setColor(color.darker());
+                } else if (getModel().isRollover()) {
+                    g2.setColor(color.brighter());
+                } else {
+                    g2.setColor(color);
+                }
+                
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(Color.WHITE);
+                g2.setFont(getFont());
+                FontMetrics fm = g2.getFontMetrics();
+                int textX = (getWidth() - fm.stringWidth(getText())) / 2;
+                int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                g2.drawString(getText(), textX, textY);
+                g2.dispose();
+            }
+        };
+        
+        button.setPreferredSize(new Dimension(120, 40));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        return button;
+    }
+    
+    private void styleTextField(JTextField textField) {
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        textField.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(borderColor, 1, true),
+            new EmptyBorder(8, 12, 8, 12)
+        ));
+        textField.setPreferredSize(new Dimension(200, 35));
+        
+        textField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (textField.getText().equals("Enter side length")) {
+                    textField.setText("");
+                    textField.setForeground(textColor);
+                }
+            }
+            
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (textField.getText().isEmpty()) {
+                    textField.setText("Enter side length");
+                    textField.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+    
+    private void resetPolygon() {
+        // Reset to original square
+        int scale = 250;
+        initializePolygon(scale);
+        updateDisplay();
+        repaint();
+    }
+    
+    private void updateDisplay() {
+        areaLabel.setText(String.format("Area: %.2f square units", polygon.getArea()));
+        anglesLabel.setText(String.format("Angles: A=%.1f° B=%.1f° C=%.1f° D=%.1f°", 
+            polygon.getAngle(0), polygon.getAngle(1), polygon.getAngle(2), polygon.getAngle(3)));
+    }
+    
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        
+        // Draw polygon with gradient fill
+        GradientPaint gradient = new GradientPaint(
+            0, 0, new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 30),
+            getWidth(), getHeight(), new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 80)
+        );
+        g2.setPaint(gradient);
+        g2.fill(poly);
+        
+        // Draw polygon border
+        g2.setColor(primaryColor);
+        g2.setStroke(new BasicStroke(polygonWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2.draw(poly);
+        
+        // Draw vertices with shadow effect
+        for (int i = 0; i < 4; i++) {
+            // Draw shadow
+            g2.setColor(new Color(0, 0, 0, 50));
+            g2.fillOval(vertices[i].x + 2, vertices[i].y + 2, vertices[i].width, vertices[i].height);
+            
+            // Draw vertex
+            g2.setColor(accentColor);
+            g2.fillOval(vertices[i].x, vertices[i].y, vertices[i].width, vertices[i].height);
+            
+            // Draw vertex border
+            g2.setColor(accentColor.darker());
+            g2.setStroke(new BasicStroke(1));
+            g2.drawOval(vertices[i].x, vertices[i].y, vertices[i].width, vertices[i].height);
+            
+            // Draw vertex label
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            String label = String.valueOf((char)('A' + i));
+            FontMetrics fm = g2.getFontMetrics();
+            int textX = vertices[i].x + (vertices[i].width - fm.stringWidth(label)) / 2;
+            int textY = vertices[i].y + (vertices[i].height + fm.getAscent()) / 2;
+            g2.drawString(label, textX, textY);
+        }
+        
+        // Draw side lengths with background
+        g2.setColor(textColor);
+        g2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        for (int i = 0; i < 4; i++) {
+            String length = String.format("%.1f", polygon.GetLength(i));
+            int x = (int) polygon.getXMid(i);
+            int y = (int) polygon.getYMid(i);
+            FontMetrics fm = g2.getFontMetrics();
+            int textWidth = fm.stringWidth(length);
+            int textHeight = fm.getHeight();
+            
+            // Draw background for text
+            g2.setColor(new Color(255, 255, 255, 200));
+            g2.fillRoundRect(x - textWidth/2 - 3, y - textHeight/2 - 2, textWidth + 6, textHeight + 4, 5, 5);
+            
+            // Draw text
+            g2.setColor(textColor);
+            g2.drawString(length, x - textWidth/2, y + textHeight/2 - 2);
+        }
+        
+        g2.dispose();
+    }
+    
+    private int getVertexIndex(int x, int y) {
+        for (int i = 0; i < 4; i++) {
+            if (vertices[i].contains(x, y)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    @Override
+    public void mouseMoved(MouseEvent me) {
+        int x = me.getX();
+        int y = me.getY();
+        
+        if (getVertexIndex(x, y) >= 0) {
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        } else {
+            setCursor(Cursor.getDefaultCursor());
+        }
+    }
+    
+    @Override
+    public void mouseDragged(MouseEvent me) {
+        int x = me.getX();
+        int y = me.getY();
+        
+        if (getBounds().contains(x, y) && currentVertexIndex >= 0) {
+            polygon.changePoint(x, y, currentVertexIndex);
+            vertices[currentVertexIndex].x = (int) (polygon.getX(currentVertexIndex) - verticesSize * 0.5);
+            vertices[currentVertexIndex].y = (int) (polygon.getY(currentVertexIndex) - verticesSize * 0.5);
+            poly = new Polygon(polygon.getXs(), polygon.getYs(), 4);
+            updateDisplay();
+            repaint();
+        }
+    }
 }

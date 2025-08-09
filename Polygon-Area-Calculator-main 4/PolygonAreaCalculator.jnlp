@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="http://your-domain.com/polygon-calculator" href="PolygonAreaCalculator.jnlp">
+    <information>
+        <title>Polygon Area Calculator</title>
+        <vendor>Indian Institute of Information Technology, Allahabad</vendor>
+        <description>Interactive Polygon Area Calculator - OOM C3 Project</description>
+        <description kind="short">Interactive geometric analysis tool for calculating polygon areas, angles, and side lengths.</description>
+        <icon href="icon.png"/>
+        <offline-allowed/>
+    </information>
+    
+    <security>
+        <all-permissions/>
+    </security>
+    
+    <resources>
+        <j2se version="1.8+" initial-heap-size="256m" max-heap-size="512m"/>
+        <jar href="PolygonAreaCalculator.jar" main="true"/>
+    </resources>
+    
+    <application-desc main-class="gui.Start">
+        <argument>4</argument>
+        <argument>250</argument>
+    </application-desc>
+    
+    <update check="background"/>
+</jnlp> 
