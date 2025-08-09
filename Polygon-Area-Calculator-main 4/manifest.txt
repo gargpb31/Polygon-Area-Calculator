@@ -1,2 +1,0 @@
-Main-Class: gui.Start
-Class-Path: . 
