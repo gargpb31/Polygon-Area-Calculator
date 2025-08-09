@@ -125,6 +125,52 @@ public class Start extends JPanel {
         collegeName.setForeground(textColor);
         collegeName.setAlignmentX(Component.CENTER_ALIGNMENT);
         teamPanel.add(collegeName);
+        teamPanel.add(Box.createVerticalStrut(15));
+        
+        // Student section
+        JLabel studentTitle = new JLabel("Student");
+        studentTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        studentTitle.setForeground(primaryColor);
+        studentTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        teamPanel.add(studentTitle);
+        teamPanel.add(Box.createVerticalStrut(10));
+        
+        // Student name
+        JLabel studentName = new JLabel("Sunny Garg");
+        studentName.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        studentName.setForeground(textColor);
+        studentName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        teamPanel.add(studentName);
+        teamPanel.add(Box.createVerticalStrut(8));
+        
+        // Email addresses
+        JLabel email1 = new JLabel("sunnygarg887@gmail.com");
+        email1.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        email1.setForeground(secondaryColor);
+        email1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        teamPanel.add(email1);
+        teamPanel.add(Box.createVerticalStrut(2));
+        
+        JLabel email2 = new JLabel("dev.sunny995@gmail.com");
+        email2.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        email2.setForeground(secondaryColor);
+        email2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        teamPanel.add(email2);
+        teamPanel.add(Box.createVerticalStrut(8));
+        
+        // Portfolio link
+        JLabel portfolioLabel = new JLabel("Portfolio:");
+        portfolioLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        portfolioLabel.setForeground(textColor);
+        portfolioLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        teamPanel.add(portfolioLabel);
+        teamPanel.add(Box.createVerticalStrut(2));
+        
+        JLabel portfolioLink = new JLabel("portfolio-sunny-gargs-projects.vercel.app");
+        portfolioLink.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        portfolioLink.setForeground(accentColor);
+        portfolioLink.setAlignmentX(Component.CENTER_ALIGNMENT);
+        teamPanel.add(portfolioLink);
         teamPanel.add(Box.createVerticalStrut(8));
         
         return teamPanel;

@@ -9,6 +9,9 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
 
 @SuppressWarnings("serial")
 public class Plot extends JPanel implements MouseMotionListener {
@@ -17,6 +20,10 @@ public class Plot extends JPanel implements MouseMotionListener {
     private Rectangle[] vertices = new Rectangle[4];
     private Polygon poly;
     private int currentVertexIndex = -1;
+    
+    // Store parent frame and scale for navigation
+    private JFrame parentFrame;
+    private int scale;
     
     // Modern color scheme
     public Color primaryColor = new Color(52, 152, 219); // Blue
@@ -31,12 +38,16 @@ public class Plot extends JPanel implements MouseMotionListener {
     private JPanel infoPanel;
     private JLabel areaLabel;
     private JLabel anglesLabel;
-    private JTextField sideLengthField;
+    private JTextField[] sideLengthFields; // Array for 4 side length fields
     private JButton resetButton;
     private JButton goBackButton;
+    private JButton applyButton;
     private JPanel controlPanel;
     
     public Plot(JFrame jFrame, int scale) {
+        this.parentFrame = jFrame;
+        this.scale = scale;
+        
         setSize(1400, 800); // Increased size for better layout
         setBackground(backgroundColor);
         setLayout(new BorderLayout(20, 20));
@@ -138,40 +149,88 @@ public class Plot extends JPanel implements MouseMotionListener {
     }
     
     private void createControlPanel() {
-        controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        controlPanel = new JPanel(new GridBagLayout());
         controlPanel.setBackground(surfaceColor);
         controlPanel.setBorder(BorderFactory.createCompoundBorder(
             new LineBorder(borderColor, 1, true),
             new EmptyBorder(15, 20, 15, 20)
         ));
         
-        // Side length field
-        sideLengthField = new JTextField("Enter side length", 15);
-        styleTextField(sideLengthField);
-        sideLengthField.setToolTipText("Enter a specific side length to reset the polygon");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // Create side length fields with labels
+        sideLengthFields = new JTextField[4];
+        String[] sideLabels = {"AB:", "BC:", "CD:", "DA:"};
+        
+        for (int i = 0; i < 4; i++) {
+            // Label
+            JLabel label = new JLabel(sideLabels[i]);
+            label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            label.setForeground(textColor);
+            gbc.gridx = i * 2;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            controlPanel.add(label, gbc);
+            
+            // Text field
+            sideLengthFields[i] = new JTextField("Enter length", 8);
+            styleTextField(sideLengthFields[i]);
+            sideLengthFields[i].setToolTipText("Enter length for side " + sideLabels[i]);
+            
+            // Add Enter key listener
+            final int index = i;
+            sideLengthFields[i].addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        applySideLengths();
+                    }
+                }
+            });
+            
+            gbc.gridx = i * 2 + 1;
+            gbc.gridy = 0;
+            controlPanel.add(sideLengthFields[i], gbc);
+        }
+        
+        // Buttons row
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
         
         // Reset button
         resetButton = createStyledButton("Reset", accentColor);
         resetButton.setToolTipText("Reset polygon to original square shape");
         resetButton.addActionListener(e -> resetPolygon());
+        controlPanel.add(resetButton, gbc);
+        
+        gbc.gridx = 2;
+        gbc.gridwidth = 2;
+        
+        // Apply button
+        applyButton = createStyledButton("Apply", primaryColor);
+        applyButton.setToolTipText("Apply new side lengths to the polygon");
+        applyButton.addActionListener(e -> applySideLengths());
+        controlPanel.add(applyButton, gbc);
+        
+        gbc.gridx = 4;
+        gbc.gridwidth = 2;
         
         // Go back button
         goBackButton = createStyledButton("Go Back", secondaryColor);
         goBackButton.setToolTipText("Return to the main menu");
         goBackButton.addActionListener(e -> {
             // Handle go back functionality
-            JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
             parentFrame.getContentPane().removeAll();
-            Start info = new Start(parentFrame, 0, 250);
-            parentFrame.setSize(info.getSize());
-            parentFrame.getContentPane().add(info);
+            Start startPanel = new Start(parentFrame, 4, scale);
+            parentFrame.setSize(startPanel.getSize());
+            parentFrame.getContentPane().add(startPanel);
             parentFrame.revalidate();
             parentFrame.repaint();
         });
-        
-        controlPanel.add(sideLengthField);
-        controlPanel.add(resetButton);
-        controlPanel.add(goBackButton);
+        controlPanel.add(goBackButton, gbc);
     }
     
     private JPanel createSidePanel() {
@@ -248,7 +307,7 @@ public class Plot extends JPanel implements MouseMotionListener {
         textField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (textField.getText().equals("Enter side length")) {
+                if (textField.getText().equals("Enter length")) {
                     textField.setText("");
                     textField.setForeground(textColor);
                 }
@@ -257,7 +316,7 @@ public class Plot extends JPanel implements MouseMotionListener {
             @Override
             public void focusLost(FocusEvent e) {
                 if (textField.getText().isEmpty()) {
-                    textField.setText("Enter side length");
+                    textField.setText("Enter length");
                     textField.setForeground(Color.GRAY);
                 }
             }
@@ -380,5 +439,63 @@ public class Plot extends JPanel implements MouseMotionListener {
             updateDisplay();
             repaint();
         }
+    }
+
+    private void applySideLengths() {
+        try {
+            double[] newSideLengths = new double[4];
+            for (int i = 0; i < 4; i++) {
+                String text = sideLengthFields[i].getText().trim();
+                if (text.equals("Enter length") || text.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please enter values for all side lengths.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                newSideLengths[i] = Double.parseDouble(text);
+                if (newSideLengths[i] <= 0) {
+                    JOptionPane.showMessageDialog(this, "Side lengths must be positive numbers.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+            
+            // Check if the side lengths can form a valid quadrilateral
+            if (!isValidQuadrilateral(newSideLengths)) {
+                JOptionPane.showMessageDialog(this, "The given side lengths cannot form a valid quadrilateral.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            polygon.setPolygonFromSideLengths(newSideLengths);
+            poly = new Polygon(polygon.getXs(), polygon.getYs(), 4);
+            
+            // Update vertices
+            for (int i = 0; i < 4; i++) {
+                Rectangle r = new Rectangle();
+                r.setBounds((int) (polygon.getX(i) - verticesSize * 0.5), 
+                           (int) (polygon.getY(i) - verticesSize * 0.5),
+                           verticesSize, verticesSize);
+                vertices[i] = r;
+            }
+            
+            updateDisplay();
+            repaint();
+            
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numbers for side lengths.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private boolean isValidQuadrilateral(double[] sides) {
+        // Check if any side is greater than the sum of the other three sides
+        for (int i = 0; i < 4; i++) {
+            double sum = 0;
+            for (int j = 0; j < 4; j++) {
+                if (j != i) {
+                    sum += sides[j];
+                }
+            }
+            if (sides[i] >= sum) {
+                return false;
+            }
+        }
+        return true;
     }
 }

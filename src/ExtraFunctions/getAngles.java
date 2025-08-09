@@ -96,4 +96,74 @@ public class getAngles extends getLength {
 		calculateLengths();
 		calculateAngles();
 	}
+	
+	// Method to set polygon based on side lengths
+	public void setPolygonFromSideLengths(double[] sideLengths) {
+		if (sideLengths.length != 4) {
+			return;
+		}
+		
+		// Start with point A at origin (0,0)
+		xPoints[0] = 0;
+		yPoints[0] = 0;
+		
+		// Point B at (sideLengths[0], 0) - AB side
+		xPoints[1] = (int) sideLengths[0];
+		yPoints[1] = 0;
+		
+		// Calculate point C using law of cosines
+		// We'll use a simple approach: place C at a reasonable position
+		// For now, we'll use a right angle approach
+		double angleB = Math.acos((sideLengths[0] * sideLengths[0] + sideLengths[1] * sideLengths[1] - sideLengths[2] * sideLengths[2]) / (2 * sideLengths[0] * sideLengths[1]));
+		if (Double.isNaN(angleB)) {
+			angleB = Math.PI / 2; // Default to 90 degrees if calculation fails
+		}
+		
+		xPoints[2] = (int) (sideLengths[0] + sideLengths[1] * Math.cos(angleB));
+		yPoints[2] = (int) (sideLengths[1] * Math.sin(angleB));
+		
+		// Calculate point D to close the polygon
+		// We'll use the law of cosines again
+		double angleC = Math.acos((sideLengths[1] * sideLengths[1] + sideLengths[2] * sideLengths[2] - sideLengths[3] * sideLengths[3]) / (2 * sideLengths[1] * sideLengths[2]));
+		if (Double.isNaN(angleC)) {
+			angleC = Math.PI / 2; // Default to 90 degrees if calculation fails
+		}
+		
+		// Calculate D using the angle from C
+		double totalAngle = angleB + angleC;
+		xPoints[3] = (int) (sideLengths[0] + sideLengths[1] * Math.cos(angleB) + sideLengths[2] * Math.cos(totalAngle));
+		yPoints[3] = (int) (sideLengths[1] * Math.sin(angleB) + sideLengths[2] * Math.sin(totalAngle));
+		
+		// Center the polygon
+		centerPolygon();
+		
+		calculateArea();
+		calculateLengths();
+		calculateAngles();
+	}
+	
+	// Helper method to center the polygon
+	private void centerPolygon() {
+		int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+		
+		for (int i = 0; i < 4; i++) {
+			minX = Math.min(minX, xPoints[i]);
+			minY = Math.min(minY, yPoints[i]);
+			maxX = Math.max(maxX, xPoints[i]);
+			maxY = Math.max(maxY, yPoints[i]);
+		}
+		
+		int centerX = (minX + maxX) / 2;
+		int centerY = (minY + maxY) / 2;
+		
+		// Move to center around (400, 300) - typical screen center
+		int targetCenterX = 400;
+		int targetCenterY = 300;
+		
+		for (int i = 0; i < 4; i++) {
+			xPoints[i] = xPoints[i] - centerX + targetCenterX;
+			yPoints[i] = yPoints[i] - centerY + targetCenterY;
+		}
+	}
 }
